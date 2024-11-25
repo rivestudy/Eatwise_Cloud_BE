@@ -1,0 +1,6 @@
+.git
+upload-test/
+__pycache__
+*.pyc
+*.pyo
+*.pyd
