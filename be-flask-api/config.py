@@ -1,5 +1,0 @@
-CLOUD_STORAGE_BUCKET = '########'  
-CLOUD_SQL_CONNECTION_NAME = '########'  
-DB_USER = '########' 
-DB_PASSWORD = '########' 
-DB_NAME = '########' 
