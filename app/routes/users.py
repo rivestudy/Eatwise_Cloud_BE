@@ -25,6 +25,14 @@ def get_user(user_id):
     query = "SELECT * FROM users WHERE id = %s"
     cursor.execute(query, (user_id,))
     user = cursor.fetchone()
+    
     if user:
-        return jsonify(user), 200
-    return jsonify({"error": "User not found"}), 404
+        response = jsonify(user)
+        response.headers['X-Data-Name'] = 'User Data'
+        response.headers['X-User-Id'] = user_id
+        response.headers['Content-Type'] = 'application/json'
+        return response, 200
+   
+    response = jsonify({"error": "User not found"})
+    response.headers['X-Error'] = 'User Not Found'
+    return response, 404

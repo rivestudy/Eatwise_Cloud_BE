@@ -1,21 +1,16 @@
+# app/utils/gcloud.py
 from google.cloud import storage
-from werkzeug.utils import secure_filename
-import os
+from werkzeug.datastructures import FileStorage
+from app.utils.config import Config
 
 def upload_to_bucket(bucket_name, file):
-    """Uploads a file to Google Cloud Storage."""
-    # Ensure you have the service account credentials set up properly for Google Cloud Storage.
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
+    if not bucket_name:
+        raise ValueError("Cannot determine path without bucket name.")  
     
-    # Securely name the file
-    filename = secure_filename(file.filename)
+    storage_client = storage.Client.from_service_account_json(Config.SERVICE_ACCOUNT_FILE)
     
-    # Create a blob in the bucket
-    blob = bucket.blob(filename)
+    bucket = storage_client.get_bucket(bucket_name)
     
-    # Upload the file's content directly from the FileStorage object
-    blob.upload_from_file(file)
-
-    # Optionally, return the public URL or path to the file
-    return blob.public_url  # Or any other URL/path based on your configuration
+    blob = bucket.blob(file.filename)  
+    blob.upload_from_file(file)  
+    return blob.public_url  
