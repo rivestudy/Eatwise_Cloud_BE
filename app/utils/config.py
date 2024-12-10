@@ -6,4 +6,4 @@ class Config:
     DB_PASSWORD = os.getenv("DB_PASSWORD", "eatwise-sql")
     DB_NAME = os.getenv("DB_NAME", "eatwise-db-data")
     BUCKET_NAME = os.getenv("BUCKET_NAME", "eatwise-bucket-1")
-    SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE", "service-account.json")
+    SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE", "./service-account.json")

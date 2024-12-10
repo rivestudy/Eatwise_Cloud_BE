@@ -1,12 +1,11 @@
 from pymysql import connect
-from app.utils.config import Config
 
 def get_db_connection():
     return connect(
-        host=Config.DB_HOST,
-        user=Config.DB_USER,
-        password=Config.DB_PASSWORD,
-        database=Config.DB_NAME,
+        host="34.101.149.230",
+        user="root",
+        password="eatwise-sql",
+        database="eatwise-db-data",
     )
 
 def execute_query(conn, query, args=None):

@@ -3,7 +3,7 @@ from PIL import Image
 import numpy as np
 
 LABELS = ["a", "b", "c"]
-MODEL_PATH = "app/model/model.h5"
+MODEL_PATH = "./model.h5"
 model = tf.keras.models.load_model(MODEL_PATH)
 
 def predict_image(image_path):

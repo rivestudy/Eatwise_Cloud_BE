@@ -14,14 +14,11 @@ def get_articles():
 
 @articles_bp.route('/articles', methods=['POST'])
 def add_article():
-    data = request.form  
-    file = request.files.get('image')  
-
+    data = request.form
+    file = request.files.get('image')
     image_url = upload_to_bucket(None, file)
 
     conn = get_db_connection()
-
     query = "INSERT INTO articles (title, description, content, image_url) VALUES (%s, %s, %s, %s)"
     execute_query(conn, query, (data['title'], data['description'], data['content'], image_url))
-
     return jsonify({"message": "Article added successfully"})
