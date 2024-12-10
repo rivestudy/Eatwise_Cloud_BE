@@ -18,7 +18,7 @@ def add_user():
     ))
     return jsonify({"message": "User added successfully"}), 201
 
-@users_bp.route('/users/<int:user_id>', methods=['GET'])
+@users_bp.route('/users/<string:user_id>', methods=['GET'])
 def get_user(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
