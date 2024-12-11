@@ -1,34 +1,27 @@
 from flask import Blueprint, request, jsonify
-from app.model.predict import predict_image
-from app.utils.gcloud import upload_to_bucket
-from app.utils.database import get_db_connection, execute_query
-from datetime import datetime
-
+from app.model.predict import preprocess_image, get_prediction_with_threshold, get_nutrition, model, class_names
 predictions_bp = Blueprint('predictions', __name__)
 
 @predictions_bp.route('/predict', methods=['POST'])
 def predict():
-    user_id = request.args.get('user_id')
-    if not user_id:
-        return jsonify({"error": "user_id is required"}), 400
+    if 'image' not in request.files:
+        return jsonify({"error": "No image file uploaded."}), 400
 
-    if 'file' not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({"error": "No image file selected."}), 400
 
-    file = request.files['file']
-    file.save("temp_image.jpg")
+    try:
+        preprocessed_image = preprocess_image(file)
+        predictions = model.predict(preprocessed_image)[0]
+        result = get_prediction_with_threshold(predictions, class_names)
 
-    predicted_food = predict_image("temp_image.jpg")
-    gcs_url = upload_to_bucket(None, "temp_image.jpg")
+        response = {"image_label": result["label"], "confidence": result["confidence"]}
 
-    conn = get_db_connection()
-    query = """
-        INSERT INTO predict_history (user_id, food_name, prediction_date)
-        VALUES (%s, %s, %s)
-    """
-    execute_query(conn, query, (user_id, predicted_food, datetime.now()))
+        if result["label"] != "Unknown":
+            nutrition = get_nutrition(result["label"])
+            response["nutrition_info"] = nutrition or "Nutrition information not found."
 
-    return jsonify({
-        "predicted_food": predicted_food,
-        "file_url": gcs_url
-    })
+        return jsonify(response)
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500

@@ -1,4 +1,3 @@
-# app/utils/gcloud.py
 from google.cloud import storage
 from werkzeug.datastructures import FileStorage
 from app.utils.config import Config
