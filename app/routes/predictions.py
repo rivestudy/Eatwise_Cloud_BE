@@ -13,7 +13,9 @@ def predict():
 
     try:
         preprocessed_image = preprocess_image(file)
+        
         predictions = model.predict(preprocessed_image)[0]
+        
         result = get_prediction_with_threshold(predictions, class_names)
 
         response = {"image_label": result["label"], "confidence": result["confidence"]}
