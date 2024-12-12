@@ -36,7 +36,7 @@ def get_prediction_with_threshold(predictions, class_names, threshold=80):
         if max_confidence_score >= threshold:
             label = index_to_label.get(max_confidence_idx, "Unknown")
             return {
-                "label": label.capitalize(),
+                "label": label.replace('_', ' ').title(),
                 "confidence": max_confidence_score
             }
         return {
