@@ -9,11 +9,16 @@ if physical_devices:
     tf.config.set_visible_devices([], 'GPU')  
 
 model = tf.keras.models.load_model('app/model/model.h5')
-df = pd.read_csv('https://raw.githubusercontent.com/rivestudy/Eatwise_Cloud_BE/refs/heads/main/app/model/nutritiondata.csv')
 
-class_names = df.iloc[:, 2].unique().tolist()
+df_labels = pd.read_csv('https://raw.githubusercontent.com/rivestudy/Eatwise_Cloud_BE/refs/heads/main/app/model/food_labels.csv')
+df_nutrition = pd.read_csv('https://raw.githubusercontent.com/rivestudy/Eatwise_Cloud_BE/refs/heads/main/app/model/nutritiondata.csv')
+
+index_to_label = df_labels.set_index('Index')['Label'].to_dict()
+
+class_names = df_nutrition['food'].str.strip().str.lower().unique().tolist()
 
 def preprocess_image(file_stream):
+    """Preprocess image for prediction."""
     try:
         file_bytes = io.BytesIO(file_stream.read())
         img = tf.keras.utils.load_img(file_bytes, target_size=(224, 224))
@@ -28,10 +33,10 @@ def get_prediction_with_threshold(predictions, class_names, threshold=80):
     try:
         max_confidence_idx = np.argmax(predictions)
         max_confidence_score = predictions[max_confidence_idx] * 100
-
         if max_confidence_score >= threshold:
+            label = index_to_label.get(max_confidence_idx, "Unknown")
             return {
-                "label": class_names[max_confidence_idx],
+                "label": label.capitalize(),
                 "confidence": max_confidence_score
             }
         return {
@@ -47,10 +52,12 @@ def get_prediction_with_threshold(predictions, class_names, threshold=80):
 
 def get_nutrition(label):
     try:
-        row = df[df['food'] == label]
+        normalized_label = label.strip().lower()
+        row = df_nutrition[df_nutrition['food'].str.strip().str.lower() == normalized_label]
+        
         if not row.empty:
             nutrition_info = {
-                key.lower(): int(value) if isinstance(value, np.int64) else value
+                key.lower(): int(value) if isinstance(value, (np.int64, np.float64)) and value.is_integer() else value
                 for key, value in row.iloc[0].items() if key != 'food'
             }
             return nutrition_info
