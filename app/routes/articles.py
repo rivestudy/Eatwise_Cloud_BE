@@ -4,6 +4,7 @@ from app.utils.gcloud import upload_to_bucket
 from app.utils.config import Config  
 
 articles_bp = Blueprint('articles', __name__)
+
 @articles_bp.route('/articles', methods=['GET'])
 def get_articles():
     conn = get_db_connection()
@@ -12,25 +13,9 @@ def get_articles():
     rows = cursor.fetchall()
     
     articles_data = []
-
-    response = make_response(jsonify(rows), 200)
-    response.headers['Content-Type'] = 'application/json'
-    response.headers['X-Data-Name'] = 'Articles List'
-    response.headers['Access-Control-Allow-Origin'] = '*'
     
-    for idx, row in enumerate(rows):
-        article_id = row[0]  
-        title = row[1] 
-        description = row[2]  
-        content = row[3]  
-        image_url = row[4] 
-        timestamp = row[5]  
-        
-        response.headers[f'X-Article-{article_id}-Title'] = title
-        response.headers[f'X-Article-{article_id}-Description'] = description
-        response.headers[f'X-Article-{article_id}-Content'] = content
-        response.headers[f'X-Article-{article_id}-Image_url'] = image_url
-        response.headers[f'X-Article-{article_id}-Timestamp'] = timestamp
+    for row in rows:
+        article_id, title, description, content, image_url, timestamp = row
         
         articles_data.append({
             'id': article_id,
@@ -41,9 +26,13 @@ def get_articles():
             'timestamp': timestamp
         })
     
-    response.set_data(jsonify(articles_data).get_data())
+    response = jsonify(articles_data)
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['X-Data-Name'] = 'Articles_List'
+    response.headers['Access-Control-Allow-Origin'] = '*'
     
-    return response
+    return response, 200
+
 @articles_bp.route('/articles', methods=['POST'])
 def add_article():
     data = request.form  
@@ -59,8 +48,22 @@ def add_article():
 
     conn = get_db_connection()
     query = "INSERT INTO articles (title, description, content, image_url) VALUES (%s, %s, %s, %s)"
-    execute_query(conn, query, (data['title'], data['description'], data['content'], image_url))
+    
+    try:
+        execute_query(conn, query, (
+            data['title'], 
+            data['description'], 
+            data['content'], 
+            image_url
+        ))
+    except Exception as e:
+        return jsonify({"error": f"Database insertion failed: {str(e)}"}), 500
 
-    response = jsonify({"message": "Article added successfully"})
-    response.headers['X-Operation'] = 'Article Creation'
+    response = jsonify({
+        "message": "Article added successfully",
+        "image_url": image_url
+    })
+    
+    response.headers['X-Operation'] = 'Article_Creation'
+    
     return response, 201
